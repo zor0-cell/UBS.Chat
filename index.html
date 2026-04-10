@@ -207,11 +207,12 @@
     .input-bar{
       display:flex;gap:8px;align-items:center;
       padding:10px 12px;
-      padding-bottom:max(10px,env(safe-area-inset-bottom));
+      padding-bottom:calc(max(10px,env(safe-area-inset-bottom)) + var(--kb-height, 0px));
       background:var(--surface);
       border-top:1px solid var(--border);
       flex-shrink:0;
-      z-index:10;
+      z-index:20;
+      position: relative;
     }
     .input-bar input{
       flex:1;
@@ -977,11 +978,16 @@ function tryLogin(){
   err.textContent="";
 
   myEmail=val;
-  const lp=val.split("@")[0];
-  const h=hashStr(lp);
-  const num=(h%90)+10;
-  myAlias="Аноним #"+num;
-  myColor=COLORS[num%COLORS.length];
+  
+  // Генерация НОВОГО случайного номера для каждого входа (исправляет проблему #10)
+  const num = Math.floor(Math.random() * 9000) + 1000; 
+  myAlias = "Аноним #" + num;
+  myColor = COLORS[num % COLORS.length];
+
+  // Сохраняем ник в сессии (SessionStorage), чтобы при обновлении страницы он не менялся, 
+  // но при новом входе (через форму) был новый.
+  sessionStorage.setItem("ubs_my_alias", myAlias);
+  sessionStorage.setItem("ubs_my_email", myEmail);
 
   // Desktop sidebar avatar
   const sdAv=document.getElementById("sd-av");
@@ -1042,19 +1048,29 @@ msgInp.addEventListener("input",e=>{
   onTyping();
 });
 
-// Fix iOS keyboard: scroll messages when keyboard opens
-if(/iPhone|iPad|iPod/.test(navigator.userAgent)){
-  window.visualViewport?.addEventListener("resize",()=>{
+// Fix iOS & Android keyboard: scroll messages when keyboard opens
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",()=>{
     const ct=document.getElementById("messages");
-    ct.scrollTop=ct.scrollHeight;
+    const v = window.visualViewport;
+    // Если вьюпорт уменьшился (клавиатура открыта)
+    if (v.height < window.innerHeight * 0.8) {
+       ct.scrollTop = ct.scrollHeight;
+       // Для некоторых браузеров добавляем отступ снизу
+       document.documentElement.style.setProperty('--kb-height', '0px');
+    }
+    setTimeout(() => ct.scrollTop = ct.scrollHeight, 100);
   });
 }
 
-// Poll sync every 2s
+// Poll sync every 1s for better real-time feel
+let lastKnownUsers = [];
 setInterval(()=>{
   if(!loggedIn)return;
   const fresh=load(MSG_KEY);
   let changed=false;
+  
+  // Sync Messages
   ROOMS.forEach(r=>{
     const oldLen=(msgs[r.id]||[]).length;
     const newArr=fresh[r.id]||[];
@@ -1071,9 +1087,21 @@ setInterval(()=>{
       }
     }
   });
+  
+  // Sync Users & Show Join notifications
+  const online = getOnlineUsers();
+  online.forEach(u => {
+    if (!lastKnownUsers.some(lu => lu.email === u.email)) {
+      if (u.email !== myEmail) {
+         showJoinLine(u.alias);
+      }
+    }
+  });
+  lastKnownUsers = online;
+
   if(changed){rebuildTabs();rebuildDesktopRooms()}
   renderOnline();
-},2000);
+},1500); // 1.5s interval for snappy feel
 
 // Cleanup old users periodically
 setInterval(()=>{
