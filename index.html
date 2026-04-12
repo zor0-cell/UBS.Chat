@@ -1,581 +1,1039 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-  <meta name="description" content="Анонимный чат для студентов UBS"/>
-  <meta name="theme-color" content="#0a0c10"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>UBS Chat</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
   <style>
-    :root{
-      --bg:#0a0c10;--surface:#12151b;--surface2:#1a1f28;--surface3:#222833;
-      --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.10);
-      --accent:#4f8cff;--accent2:#2563eb;--accent-glow:rgba(79,140,255,.25);
-      --text:#e8eaf0;--text2:#8b909e;--text3:#555a68;
-      --bubble-other:#1a1f28;--green:#22c97a;--red:#ff5c5c;
-      --r:14px;--r-sm:10px;
+    :root {
+      --bg: #0d0f12;
+      --surface: #161a20;
+      --surface2: #1e232c;
+      --border: rgba(255, 255, 255, .07);
+      --border2: rgba(255, 255, 255, .13);
+      --accent: #4f8cff;
+      --accent2: #2563eb;
+      --text: #e8eaf0;
+      --text2: #8b909e;
+      --text3: #555a68;
+      --bubble-me: #1e3a6e;
+      --bubble-other: #1e232c;
+      --green: #22c97a;
+      --red: #ff5c5c;
+      --radius: 16px;
+      --radius-sm: 10px;
     }
-    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-    html,body{height:100%;background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(--text);overflow:hidden;touch-action:manipulation}
 
-    .app{display:flex;flex-direction:column;height:100dvh;height:100vh;position:relative}
-
-    /* HEADER */
-    .header{display:flex;align-items:center;gap:10px;padding:0 14px;height:54px;min-height:54px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10;padding-top:env(safe-area-inset-top)}
-    .h-logo{width:32px;height:32px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;box-shadow:0 2px 12px var(--accent-glow)}
-    .h-info{flex:1;min-width:0}
-    .h-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .h-sub{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .h-pills{display:flex;gap:6px;align-items:center;flex-shrink:0}
-    .pill{border-radius:20px;padding:3px 10px;font-size:10px;font-weight:500;font-family:'DM Mono',monospace;white-space:nowrap}
-    .pill-online{background:rgba(34,201,122,.1);border:1px solid rgba(34,201,122,.2);color:var(--green)}
-    .pill-anon{background:rgba(79,140,255,.08);border:1px solid rgba(79,140,255,.18);color:var(--accent)}
-    .users-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);flex-shrink:0}
-    .users-btn:active{transform:scale(.92)}
-    .users-btn svg{width:16px;height:16px}
-
-    /* ROOM TABS */
-    .room-tabs{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;overflow-y:hidden;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-    .room-tabs::-webkit-scrollbar{display:none}
-    .tab{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;flex-shrink:0;transition:all .2s}
-    .tab:active{transform:scale(.96)}
-    .tab.active{background:rgba(79,140,255,.15);border-color:rgba(79,140,255,.35)}
-    .tab-icon{font-size:14px;line-height:1}
-    .tab-name{font-size:12px;font-weight:500;color:var(--text2);white-space:nowrap}
-    .tab.active .tab-name{color:var(--accent);font-weight:600}
-
-    /* MESSAGES */
-    .messages{flex:1;overflow-y:auto;padding:14px 12px 10px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-    .messages::-webkit-scrollbar{width:3px}
-    .messages::-webkit-scrollbar-track{background:transparent}
-    .messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-    .sys-line{text-align:center;font-size:10px;color:var(--text3);padding:6px 0;font-family:'DM Mono',monospace}
-    .sys-line.join{color:var(--green);opacity:.7}
-
-    .msg-wrap{display:flex;gap:7px;align-items:flex-end;max-width:85%;animation:fadeUp .25s ease}
-    .msg-wrap.me{align-self:flex-end;flex-direction:row-reverse}
-    .msg-wrap.other{align-self:flex-start}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-    .msg-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
-    .msg-body{display:flex;flex-direction:column;gap:2px}
-    .msg-wrap.me .msg-body{align-items:flex-end}
-    .msg-meta{font-size:9px;color:var(--text3);padding:0 4px;font-family:'DM Mono',monospace}
-    .bubble{padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word}
-    .msg-wrap.other .bubble{background:var(--bubble-other);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--text)}
-    .msg-wrap.me .bubble{background:linear-gradient(135deg,#1a3768,#1e3f7a);border:1px solid rgba(79,140,255,.18);border-bottom-right-radius:4px;color:#c8d8ff}
-
-    /* INPUT BAR */
-    .input-bar{display:flex;gap:8px;align-items:center;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;z-index:20}
-    .input-bar input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:22px;padding:11px 16px;font-size:15px;color:var(--text);outline:none;font-family:'DM Sans',sans-serif;-webkit-appearance:none;appearance:none}
-    .input-bar input:focus{border-color:rgba(79,140,255,.5)}
-    .input-bar input::placeholder{color:var(--text3)}
-    .char-count{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;min-width:30px;text-align:right}
-    .send-btn{width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 12px var(--accent-glow)}
-    .send-btn:active{transform:scale(.9)}
-    .send-btn svg{width:18px;height:18px;fill:#fff}
-
-    /* AUTH */
-    .overlay{position:fixed;inset:0;background:rgba(10,12,16,.97);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
-    .overlay.hidden{display:none}
-    .auth-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:32px 24px;width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:18px;animation:fadeUp .4s ease}
-    .auth-logo{width:56px;height:56px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff;box-shadow:0 4px 24px var(--accent-glow)}
-    .auth-title{font-size:20px;font-weight:700;text-align:center}
-    .auth-desc{font-size:13px;color:var(--text2);text-align:center;line-height:1.6}
-    .auth-field{width:100%;display:flex;flex-direction:column;gap:6px}
-    .auth-field label{font-size:11px;color:var(--text2);letter-spacing:.3px;font-weight:500}
-    .auth-field input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:13px 16px;font-size:16px;color:var(--text);outline:none;font-family:'DM Mono',monospace;-webkit-appearance:none;appearance:none}
-    .auth-field input:focus{border-color:rgba(79,140,255,.5);box-shadow:0 0 0 3px rgba(79,140,255,.08)}
-    .auth-error{font-size:11px;color:var(--red);min-height:14px;font-family:'DM Mono',monospace}
-    .auth-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;font-size:16px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 4px 16px var(--accent-glow)}
-    .auth-btn:active{transform:scale(.98)}
-    .auth-footer{font-size:10px;color:var(--text3);text-align:center;line-height:1.5}
-    .auth-footer svg{vertical-align:middle;margin-right:3px;opacity:.5}
-
-    /* USERS PANEL */
-    .users-panel{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;opacity:0;transition:opacity .25s}
-    .users-panel.open{pointer-events:all;opacity:1}
-    .users-panel-bg{position:absolute;inset:0;background:rgba(0,0,0,.5)}
-    .users-panel-body{position:relative;z-index:1;background:var(--surface);border:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:420px;max-height:65vh;padding:20px 16px;display:flex;flex-direction:column;gap:14px;transform:translateY(100%);transition:transform .3s ease;overflow-y:auto}
-    .users-panel.open .users-panel-body{transform:translateY(0)}
-    .up-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 4px;flex-shrink:0}
-    .up-title{font-size:15px;font-weight:600;text-align:center}
-    .up-count{font-size:12px;color:var(--text3);text-align:center;font-family:'DM Mono',monospace}
-    .up-list{display:flex;flex-direction:column;gap:6px}
-    .up-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);background:var(--surface2)}
-    .up-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
-    .up-name{font-size:13px;font-weight:500;flex:1}
-    .up-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:0 0 6px rgba(34,201,122,.5)}
-
-    /* EMPTY */
-    .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;flex:1;opacity:.4;padding:40px 20px}
-    .empty-state .e-icon{font-size:36px}
-    .empty-state .e-title{font-size:14px;font-weight:500;color:var(--text2)}
-    .empty-state .e-sub{font-size:12px;color:var(--text3);text-align:center;line-height:1.5}
-
-    /* TOAST */
-    .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 18px;font-size:12px;color:var(--text);opacity:0;transition:all .3s;z-index:200;white-space:nowrap;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-    /* DESKTOP */
-    @media(min-width:641px){
-      .app{flex-direction:row}
-      .sidebar-desktop{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
-      .sd-head{padding:20px 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-      .sd-logo{width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;box-shadow:0 2px 12px var(--accent-glow)}
-      .sd-brand{font-size:14px;font-weight:600}
-      .sd-brand span{font-weight:300;color:var(--text2);margin-left:2px}
-      .sd-section{padding:14px 16px 6px;font-size:9px;font-weight:500;letter-spacing:1.2px;color:var(--text3);text-transform:uppercase}
-      .sd-room{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-radius:var(--r-sm);margin:1px 8px;transition:background .15s}
-      .sd-room:hover{background:var(--surface2)}
-      .sd-room.active{background:rgba(79,140,255,.12)}
-      .sd-room.active .sd-rname{color:var(--accent);font-weight:500}
-      .sd-ricon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-      .sd-rname{font-size:13px;color:var(--text2)}
-      .sd-foot{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
-      .sd-card{background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px;display:flex;align-items:center;gap:8px}
-      .sd-cav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
-      .sd-calias{font-size:12px;font-weight:500}
-      .sd-ctag{font-size:10px;color:var(--text3)}
-      .sd-cdot{width:6px;height:6px;border-radius:50%;background:var(--green);margin-left:auto;box-shadow:0 0 6px rgba(34,201,122,.5)}
-      .main-panel{flex:1;display:flex;flex-direction:column;min-width:0}
-      .room-tabs{display:none}
-      .pill-anon{display:inline-block}
-      .messages{padding:18px 20px 10px}
-      .msg-wrap{max-width:min(70%,520px)}
-      .input-bar{padding:12px 18px}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    @media(max-width:640px){
-      .sidebar-desktop{display:none!important}
-      .main-panel{flex:1;display:flex;flex-direction:column;min-width:0}
-      .pill-anon{display:none}
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .layout {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .s-head {
+      padding: 22px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .s-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .s-brand {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .s-brand span {
+      font-weight: 300;
+      color: var(--text2);
+      margin-left: 3px;
+    }
+
+    .s-section {
+      padding: 16px 16px 8px;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.2px;
+      color: var(--text3);
+      text-transform: uppercase;
+    }
+
+    .room {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      margin: 1px 8px;
+      transition: background .15s;
+    }
+
+    .room:hover {
+      background: var(--surface2);
+    }
+
+    .room.active {
+      background: rgba(79, 140, 255, .12);
+    }
+
+    .room.active .room-name {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .room-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .room-name {
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    .s-foot {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .my-card {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .my-av {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .my-alias {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .my-tag {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      margin-left: auto;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(34, 201, 122, .5);
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .chat-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .ch-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .ch-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .ch-sub {
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    .ch-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .online-pill {
+      background: rgba(34, 201, 122, .1);
+      border: 1px solid rgba(34, 201, 122, .25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--green);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .anon-pill {
+      background: rgba(79, 140, 255, .1);
+      border: 1px solid rgba(79, 140, 255, .25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+
+    .messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    .sys-line {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+      padding: 6px 0;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .msg-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      max-width: 72%;
+      animation: fadeUp .2s ease;
+    }
+
+    .msg-wrap.me {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .msg-wrap.other {
+      align-self: flex-start;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .msg-av {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .msg-body {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .msg-wrap.me .msg-body {
+      align-items: flex-end;
+    }
+
+    .msg-meta {
+      font-size: 10px;
+      color: var(--text3);
+      padding: 0 6px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13.5px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .msg-wrap.other .bubble {
+      background: var(--bubble-other);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      color: var(--text);
+    }
+
+    .msg-wrap.me .bubble {
+      background: var(--bubble-me);
+      border: 1px solid rgba(79, 140, 255, .2);
+      border-bottom-right-radius: 4px;
+      color: #c8d8ff;
+    }
+
+    .report-btn {
+      font-size: 10px;
+      color: var(--text3);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      font-family: 'DM Sans', sans-serif;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .msg-wrap:hover .report-btn {
+      opacity: 1;
+    }
+
+    .report-btn:hover {
+      color: var(--red);
+    }
+
+    .input-bar {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .input-bar input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 22px;
+      padding: 10px 18px;
+      font-size: 13.5px;
+      color: var(--text);
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color .15s;
+    }
+
+    .input-bar input:focus {
+      border-color: rgba(79, 140, 255, .5);
+    }
+
+    .input-bar input::placeholder {
+      color: var(--text3);
+    }
+
+    .char-c {
+      font-size: 11px;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s, transform .1s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: var(--accent2);
+    }
+
+    .send-btn:active {
+      transform: scale(.93);
+    }
+
+    .send-btn svg {
+      width: 17px;
+      height: 17px;
+      fill: #fff;
+    }
+
+    /* Overlays */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 15, 18, .97);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-box {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 40px 36px;
+      width: 380px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .auth-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .auth-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .auth-desc {
+      font-size: 13px;
+      color: var(--text2);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .field {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 11px 16px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      font-family: 'DM Mono', monospace;
+      transition: border-color .15s;
+    }
+
+    .field input:focus {
+      border-color: rgba(79, 140, 255, .5);
+      box-shadow: 0 0 0 3px rgba(79, 140, 255, .08);
+    }
+
+    .err {
+      font-size: 12px;
+      color: var(--red);
+      min-height: 16px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+
+    .btn:hover {
+      background: var(--accent2);
+    }
+
+    .btn:active {
+      transform: scale(.98);
+    }
+
+    .foot-note {
+      font-size: 11px;
+      color: var(--text3);
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    /* Setup box */
+    .setup-box {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 36px;
+      width: 540px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .setup-box::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .setup-box::-webkit-scrollbar-thumb {
+      background: var(--border2);
+    }
+
+    .setup-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .setup-step {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-text {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .step-text strong {
+      color: #fff;
+    }
+
+    .step-text code {
+      font-family: 'DM Mono', monospace;
+      font-size: 11.5px;
+      background: rgba(79, 140, 255, .15);
+      color: var(--accent);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .step-text a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .inp-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .inp-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      font-family: 'DM Mono', monospace;
+      transition: border-color .15s;
+    }
+
+    .inp-row input:focus {
+      border-color: rgba(79, 140, 255, .5);
+    }
+
+    .inp-row button {
+      padding: 10px 18px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+
+    .inp-row button:hover {
+      background: rgba(79, 140, 255, .15);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      font-size: 13px;
+      color: var(--text);
+      opacity: 0;
+      transition: all .3s;
+      z-index: 200;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(79, 140, 255, .3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media(max-width:640px) {
+      .sidebar {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<!-- AUTH -->
-<div class="overlay" id="overlay">
-  <div class="auth-box">
-    <div class="auth-logo">UBS</div>
-    <div>
-      <div class="auth-title">Студенческий чат</div>
-      <div class="auth-desc" style="margin-top:6px">Анонимный. Только для студентов UBS.<br>Ваше имя никогда не будет раскрыто.</div>
-    </div>
-    <div class="auth-field">
-      <label>Университетская почта</label>
-      <input type="email" id="email-inp" placeholder="yourname@ubs.edu.uz" autocomplete="off" spellcheck="false" inputmode="email"/>
-      <div class="auth-error" id="auth-err"></div>
-    </div>
-    <button class="auth-btn" id="auth-btn">Войти анонимно →</button>
-    <div class="auth-footer">
-      <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3 3 0 00-3 3v2H4a1 1 0 00-1 1v7a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1h-1V4a3 3 0 00-3-3zm-1 3a1 1 0 012 0v2H7V4zm1 6a1 1 0 110-2 1 1 0 010 2z"/></svg>
-      Почта только для верификации. Сообщения анонимны.
-    </div>
-  </div>
-</div>
+  <!-- SETUP OVERLAY -->
+  <div class="overlay" id="setup-overlay">
+    <div class="setup-box">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="auth-logo" style="width:42px;height:42px;font-size:13px;border-radius:11px;flex-shrink:0;">UBS</div>
+        <div class="setup-title">Настройка общей базы данных</div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.65;">
+        Чтобы сообщения были видны <strong style="color:var(--text);">всем пользователям в реальном времени</strong>,
+        подключи бесплатную Firebase Realtime Database. Займёт ~3 минуты.
+      </div>
 
-<!-- USERS PANEL -->
-<div class="users-panel" id="users-panel">
-  <div class="users-panel-bg" id="up-bg"></div>
-  <div class="users-panel-body">
-    <div class="up-handle"></div>
-    <div class="up-title">Пользователи онлайн</div>
-    <div class="up-count" id="up-count">0 человек</div>
-    <div class="up-list" id="up-list"></div>
-  </div>
-</div>
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          Открой <a href="https://console.firebase.google.com/" target="_blank">console.firebase.google.com</a> →
+          нажми <strong>«Создать проект»</strong> → введи любое название → отключи Google Analytics → нажми «Создать
+          проект».
+        </div>
+      </div>
 
-<!-- APP -->
-<div class="app">
-  <!-- Desktop sidebar -->
-  <aside class="sidebar-desktop" id="sidebar-desktop">
-    <div class="sd-head">
-      <div class="sd-logo">UBS</div>
-      <div class="sd-brand">Students <span>Chat</span></div>
-    </div>
-    <div class="sd-section">Комнаты</div>
-    <div id="sd-rooms"></div>
-    <div class="sd-foot">
-      <div class="sd-card">
-        <div class="sd-cav" id="sd-av"></div>
-        <div><div class="sd-calias" id="sd-alias">—</div><div class="sd-ctag">Анонимный</div></div>
-        <div class="sd-cdot"></div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          В левом меню выбери <strong>Realtime Database</strong> → «Создать базу данных» →
+          выбери любой регион → выбери режим <strong>«Тестовый» (test mode)</strong> → нажми «Готово».
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          Скопируй URL базы данных — выглядит так:<br />
+          <code>https://название-default-rtdb.firebaseio.com</code><br />
+          Вставь его ниже и нажми «Подключить».
+        </div>
+      </div>
+
+      <div class="field">
+        <label>URL Firebase Realtime Database</label>
+        <div class="inp-row">
+          <input type="url" id="fb-url" placeholder="https://your-project-default-rtdb.firebaseio.com" />
+          <button onclick="testFB()">Проверить</button>
+        </div>
+        <div class="err" id="setup-err" style="color:var(--text3);"></div>
+      </div>
+
+      <button class="btn" onclick="saveFB()">Подключить и открыть чат →</button>
+
+      <div class="foot-note">
+        Данные хранятся в твоей Firebase — Anthropic/Claude не имеет к ним доступа.<br />
+        Никаких логов создателя чата нет.
       </div>
     </div>
-  </aside>
+  </div>
 
-  <div class="main-panel">
-    <!-- Header -->
-    <div class="header">
-      <div class="h-logo">UBS</div>
-      <div class="h-info">
-        <div class="h-name" id="h-name">Общее</div>
-        <div class="h-sub" id="h-sub">Все студенты UBS</div>
+  <!-- AUTH OVERLAY -->
+  <div class="overlay" id="auth-overlay" style="display:none;">
+    <div class="auth-box">
+      <div class="auth-logo">UBS</div>
+      <div>
+        <div class="auth-title">Студенческий чат</div>
+        <div class="auth-desc" style="margin-top:8px;">Анонимный. Только для студентов UBS.<br />Ваше имя никогда не
+          будет раскрыто.</div>
       </div>
-      <div class="h-pills">
-        <div class="pill pill-online" id="pill-online">● 0</div>
-        <div class="pill pill-anon">🔒 Анонимно</div>
-        <button class="users-btn" id="users-btn" aria-label="Онлайн">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <div class="field">
+        <label>Университетская почта</label>
+        <input type="email" id="email-inp" placeholder="yourname@ubs.edu.uz" autocomplete="off" spellcheck="false" />
+        <div class="err" id="auth-err"></div>
+      </div>
+      <button class="btn" id="auth-btn">Войти анонимно →</button>
+      <div class="foot-note">
+        🔒 Почта используется только для проверки домена.<br />
+        Она нигде не сохраняется. Все сообщения анонимны.
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="s-head">
+        <div class="s-logo">UBS</div>
+        <div class="s-brand">Students <span>Chat</span></div>
+      </div>
+      <div class="s-section">Комнаты</div>
+      <div id="room-list"></div>
+      <div class="s-foot">
+        <div class="my-card">
+          <div class="my-av" id="s-avatar"></div>
+          <div>
+            <div class="my-alias" id="s-alias">—</div>
+            <div class="my-tag">Анонимный</div>
+          </div>
+          <div class="online-dot"></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="chat-header">
+        <div class="ch-icon" id="ch-icon">💬</div>
+        <div>
+          <div class="ch-name" id="ch-name">Общее</div>
+          <div class="ch-sub" id="ch-sub">Все студенты UBS</div>
+        </div>
+        <div class="ch-right">
+          <div class="online-pill" id="online-pill">● — онлайн</div>
+          <div class="anon-pill">🔒 анонимно</div>
+        </div>
+      </div>
+      <div class="messages" id="messages">
+        <div class="sys-line"><span class="spinner"></span>Загрузка…</div>
+      </div>
+      <div class="input-bar">
+        <input type="text" id="msg-inp" placeholder="Написать анонимно…" maxlength="400" autocomplete="off" disabled />
+        <span class="char-c" id="char-c">400</span>
+        <button class="send-btn" id="send-btn" disabled>
+          <svg viewBox="0 0 20 20">
+            <path d="M2.5 10L17.5 2.5l-3.75 7.5 3.75 7.5L2.5 10z" />
+          </svg>
         </button>
       </div>
     </div>
-
-    <!-- Room tabs (mobile) -->
-    <div class="room-tabs" id="room-tabs"></div>
-
-    <!-- Messages -->
-    <div class="messages" id="messages"></div>
-
-    <!-- Input bar -->
-    <div class="input-bar" id="input-bar">
-      <input type="text" id="msg-inp" placeholder="Написать анонимно…" maxlength="400" autocomplete="off" enterkeyhint="send"/>
-      <span class="char-count" id="char-c">400</span>
-      <button class="send-btn" id="send-btn" aria-label="Отправить">
-        <svg viewBox="0 0 24 24"><path d="M3 12l18-9-5 9 5 9L3 12z"/></svg>
-      </button>
-    </div>
   </div>
-</div>
+  <div class="toast" id="toast"></div>
 
-<div class="toast" id="toast"></div>
+  <script>
+    const DOMAIN = "ubs.edu.uz";
+    const FB_KEY = "ubs_fb_url";
+    const ALIAS_KEY = "ubs_alias";
+    const MAX_LOAD = 100;
 
-<!-- GUN.JS — P2P real-time database -->
-<script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
-<script>
-// ═══════════════════════════════════════
-//  CONFIG
-// ═══════════════════════════════════════
-const DOMAIN = "ubs.edu.uz";
-const ROOMS = [
-  {id:"general",name:"Общее",icon:"💬",desc:"Все студенты UBS",color:"#4f8cff"},
-  {id:"study",name:"Учёба",icon:"📚",desc:"Пары, вопросы",color:"#22c97a"},
-  {id:"session",name:"Сессия",icon:"📝",desc:"Экзамены, зачёты",color:"#f59e0b"},
-  {id:"jobs",name:"Работа",icon:"💼",desc:"Вакансии, советы",color:"#a78bfa"},
-  {id:"housing",name:"Жильё",icon:"🏠",desc:"Общежития, аренда",color:"#fb923c"},
-  {id:"events",name:"Мероприятия",icon:"🎉",desc:"События кампуса",color:"#34d399"},
-];
-const COLORS = [
-  {bg:"rgba(79,140,255,.16)",c:"#7ab3ff"},
-  {bg:"rgba(34,201,122,.16)",c:"#4edca0"},
-  {bg:"rgba(245,158,11,.16)",c:"#fbbf24"},
-  {bg:"rgba(167,139,250,.16)",c:"#c4b5fd"},
-  {bg:"rgba(251,146,60,.16)",c:"#fca369"},
-  {bg:"rgba(52,211,153,.16)",c:"#6ee7b7"},
-  {bg:"rgba(244,63,94,.16)",c:"#fb7185"},
-  {bg:"rgba(99,102,241,.16)",c:"#a5b4fc"},
-];
+    const ROOMS = [
+      { id: "general", name: "Общее", icon: "💬", desc: "Все студенты UBS", color: "#4f8cff" },
+      { id: "study", name: "Учёба", icon: "📚", desc: "Пары, сдача, вопросы", color: "#22c97a" },
+      { id: "session", name: "Сессия", icon: "📝", desc: "Экзамены, зачёты", color: "#f59e0b" },
+      { id: "jobs", name: "Работа / стажировки", icon: "💼", desc: "Вакансии, советы", color: "#a78bfa" },
+      { id: "housing", name: "Жильё", icon: "🏠", desc: "Общежития, аренда", color: "#fb923c" },
+      { id: "events", name: "Мероприятия", icon: "🎉", desc: "События кампуса", color: "#34d399" },
+    ];
 
-// ═══════════════════════════════════════
-//  GUN INIT — connects to public relays
-// ═══════════════════════════════════════
-const gun = Gun({
-  peers: [
-    'https://gun-manhattan.herokuapp.com/gun',
-    'https://gun-us.herokuapp.com/gun'
-  ],
-  localStorage: true
-});
+    const COLORS = [
+      { bg: "rgba(79,140,255,.18)", text: "#7ab3ff" },
+      { bg: "rgba(34,201,122,.18)", text: "#4edca0" },
+      { bg: "rgba(245,158,11,.18)", text: "#fbbf24" },
+      { bg: "rgba(167,139,250,.18)", text: "#c4b5fd" },
+      { bg: "rgba(251,146,60,.18)", text: "#fca369" },
+      { bg: "rgba(52,211,153,.18)", text: "#6ee7b7" },
+    ];
 
-const db = gun.get('ubs_student_chat_v6');
-const chatDB = db.get('rooms');
-const onlineDB = db.get('online');
+    let FB = "";
+    let myAlias = "";
+    let activeRoom = "general";
+    let activeES = null;
+    let knownIds = new Set();
 
-let myAlias = "";
-let myEmail = "";
-let myColor = COLORS[0];
-let activeRoom = "general";
-let loggedIn = false;
-let renderedIds = new Set(); // track rendered message IDs
-let currentListeners = []; // track gun listeners for cleanup
+    function ts2time(ts) { const d = new Date(ts); return d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0"); }
+    function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+    function colorOf(alias) { const n = parseInt(alias.replace(/\D/g, "")) || 0; return COLORS[n % COLORS.length]; }
+    function initials(alias) { return "A" + (alias.split("#")[1] || "?").charAt(0); }
+    function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 3000); }
 
-// ═══════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════
-function fmtTime(d){return d.getHours().toString().padStart(2,"0")+":"+d.getMinutes().toString().padStart(2,"0")}
-function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
-function getColor(alias){return COLORS[hashStr(alias)%COLORS.length]}
-function getInitials(alias){const n=alias.split("#")[1];return n?"A"+n.charAt(0):alias.charAt(0).toUpperCase()}
-function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000)}
+    // Firebase REST
+    async function fbGet(path) { const r = await fetch(FB + path + ".json?orderBy=%22ts%22&limitToLast=" + MAX_LOAD); if (!r.ok) throw r; return r.json(); }
+    async function fbPush(path, data) { const r = await fetch(FB + path + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); if (!r.ok) throw r; return r.json(); }
+    async function fbPatch(path, data) { const r = await fetch(FB + path + ".json", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); if (!r.ok) throw r; return r.json(); }
 
-// ═══════════════════════════════════════
-//  ROOM TABS
-// ═══════════════════════════════════════
-function rebuildTabs(){
-  const ct=document.getElementById("room-tabs");
-  ct.innerHTML="";
-  ROOMS.forEach(r=>{
-    const t=document.createElement("div");
-    t.className="tab"+(r.id===activeRoom?" active":"");
-    t.innerHTML=`<span class="tab-icon">${r.icon}</span><span class="tab-name">${r.name}</span>`;
-    t.addEventListener("click",()=>switchRoom(r.id));
-    ct.appendChild(t);
-  });
-  const act=ct.querySelector(".tab.active");
-  if(act)act.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
-}
-
-function rebuildDesktopRooms(){
-  const ct=document.getElementById("sd-rooms");
-  if(!ct)return;
-  ct.innerHTML="";
-  ROOMS.forEach(r=>{
-    const d=document.createElement("div");
-    d.className="sd-room"+(r.id===activeRoom?" active":"");
-    d.innerHTML=`<div class="sd-ricon" style="background:${r.color}18">${r.icon}</div><span class="sd-rname">${r.name}</span>`;
-    d.addEventListener("click",()=>switchRoom(r.id));
-    ct.appendChild(d);
-  });
-}
-
-// ═══════════════════════════════════════
-//  SWITCH ROOM
-// ═══════════════════════════════════════
-function switchRoom(id){
-  activeRoom=id;
-  const r=ROOMS.find(x=>x.id===id);
-  document.getElementById("h-name").textContent=r.name;
-  document.getElementById("h-sub").textContent=r.desc;
-  rebuildTabs();
-  rebuildDesktopRooms();
-  loadRoomMessages();
-}
-
-// ═══════════════════════════════════════
-//  LOAD & LISTEN FOR MESSAGES (Gun.js)
-// ═══════════════════════════════════════
-function loadRoomMessages(){
-  const ct=document.getElementById("messages");
-  ct.innerHTML="";
-  renderedIds.clear();
-
-  const r=ROOMS.find(x=>x.id===activeRoom);
-  
-  // Show system line
-  const sys=document.createElement("div");
-  sys.className="sys-line";
-  sys.textContent="— комната «"+r.name+"» —";
-  ct.appendChild(sys);
-
-  // Subscribe to messages from Gun
-  const roomNode = chatDB.get(activeRoom);
-  
-  roomNode.map().on(function(data, key){
-    if(!data || !data.text || !data.alias) return;
-    if(data.reported) return;
-    if(renderedIds.has(key)) return;
-    renderedIds.add(key);
-    
-    appendMsg({
-      id: key,
-      alias: data.alias,
-      text: data.text,
-      time: data.time || "??:??",
-      reported: false
-    }, true);
-  });
-}
-
-function appendMsg(m, animate){
-  if(renderedIds.size === 1 && document.querySelector(".empty-state")){
-    // Remove empty state
-    const ct=document.getElementById("messages");
-    ct.innerHTML="";
-    const r=ROOMS.find(x=>x.id===activeRoom);
-    const sys=document.createElement("div");
-    sys.className="sys-line";
-    sys.textContent="— комната «"+r.name+"» —";
-    ct.appendChild(sys);
-  }
-
-  const ct=document.getElementById("messages");
-  const isMe=m.alias===myAlias;
-  const col=getColor(m.alias);
-
-  const w=document.createElement("div");
-  w.className="msg-wrap "+(isMe?"me":"other");
-  w.dataset.mid=m.id;
-  if(!animate)w.style.animation="none";
-
-  const av=document.createElement("div");
-  av.className="msg-av";av.style.background=col.bg;av.style.color=col.c;
-  av.textContent=getInitials(m.alias);
-
-  const body=document.createElement("div");body.className="msg-body";
-  const meta=document.createElement("div");meta.className="msg-meta";
-  meta.textContent=(isMe?"Вы":m.alias)+" · "+m.time;
-  const bbl=document.createElement("div");bbl.className="bubble";bbl.textContent=m.text;
-
-  body.appendChild(meta);body.appendChild(bbl);
-  w.appendChild(av);w.appendChild(body);
-  ct.appendChild(w);
-  ct.scrollTop=ct.scrollHeight;
-}
-
-// ═══════════════════════════════════════
-//  SEND MESSAGE
-// ═══════════════════════════════════════
-function sendMessage(){
-  const inp=document.getElementById("msg-inp");
-  const text=inp.value.trim();
-  if(!text||!myAlias)return;
-  inp.value="";
-  document.getElementById("char-c").textContent="400";
-
-  const msgId = Date.now()+"_"+Math.random().toString(36).slice(2,7);
-  const msgData = {
-    alias: myAlias,
-    text: text,
-    time: fmtTime(new Date()),
-    ts: Date.now(),
-    reported: false
-  };
-
-  // Save to Gun — this auto-syncs to all connected devices
-  chatDB.get(activeRoom).get(msgId).put(msgData);
-
-  inp.focus();
-}
-
-// ═══════════════════════════════════════
-//  ONLINE PRESENCE (Gun.js)
-// ═══════════════════════════════════════
-function heartbeat(){
-  if(!loggedIn)return;
-  const sessionId = sessionStorage.getItem("ubs_session_id");
-  onlineDB.get(sessionId).put({
-    alias: myAlias,
-    lastSeen: Date.now(),
-    colorBg: myColor.bg,
-    colorC: myColor.c
-  });
-}
-
-function renderOnline(){
-  const list=document.getElementById("up-list");
-  list.innerHTML="";
-  let count=0;
-  const now=Date.now();
-
-  onlineDB.map().once(function(data, key){
-    if(!data || !data.alias) return;
-    if((now - data.lastSeen) > 45000) return; // 45s timeout
-    count++;
-
-    document.getElementById("pill-online").textContent="● "+count+" онлайн";
-    document.getElementById("up-count").textContent=count+" онлайн";
-
-    const col = {bg: data.colorBg || COLORS[0].bg, c: data.colorC || COLORS[0].c};
-    const div=document.createElement("div");
-    div.className="up-user";
-    const isYou = data.alias === myAlias && key === sessionStorage.getItem("ubs_session_id");
-    div.innerHTML=`
-      <div class="up-av" style="background:${col.bg};color:${col.c}">${getInitials(data.alias)}</div>
-      <div class="up-name">${data.alias}${isYou?" (вы)":""}</div>
-      <div class="up-dot"></div>
-    `;
-    list.appendChild(div);
-  });
-
-  // If no users found yet, show at least current user
-  setTimeout(()=>{
-    if(list.children.length===0 && loggedIn){
-      document.getElementById("pill-online").textContent="● 1 онлайн";
-      document.getElementById("up-count").textContent="1 онлайн";
-      const div=document.createElement("div");
-      div.className="up-user";
-      div.innerHTML=`
-        <div class="up-av" style="background:${myColor.bg};color:${myColor.c}">${getInitials(myAlias)}</div>
-        <div class="up-name">${myAlias} (вы)</div>
-        <div class="up-dot"></div>
-      `;
-      list.appendChild(div);
+    // Setup
+    async function testFB() {
+      const url = (document.getElementById("fb-url").value || "").trim().replace(/\/+$/, "");
+      const err = document.getElementById("setup-err");
+      if (!url.startsWith("https://")) { err.textContent = "URL должен начинаться с https://"; err.style.color = "var(--red)"; return; }
+      err.style.color = "var(--text3)"; err.textContent = "Проверяем соединение…";
+      try {
+        const r = await fetch(url + "/.json");
+        if (r.status === 401 || r.status === 403) { err.style.color = "var(--red)"; err.textContent = "⚠ Нет доступа. Убедись что включён «Тестовый режим»."; return; }
+        err.style.color = "var(--green)"; err.textContent = "✓ Соединение работает!";
+      } catch { err.style.color = "var(--red)"; err.textContent = "Не удалось подключиться. Проверь URL."; }
     }
-  }, 1000);
-}
-
-// ═══════════════════════════════════════
-//  AUTH
-// ═══════════════════════════════════════
-function tryLogin(){
-  const val=document.getElementById("email-inp").value.trim().toLowerCase();
-  const err=document.getElementById("auth-err");
-  if(!val){err.textContent="Введите email.";return}
-  if(!val.includes("@")){err.textContent="Неверный формат.";return}
-  if(val.split("@")[1]!==DOMAIN){err.textContent="Только @"+DOMAIN;return}
-  err.textContent="";
-
-  myEmail=val;
-
-  // Random unique alias for each session
-  const num=Math.floor(Math.random()*9000)+1000;
-  myAlias="Аноним #"+num;
-  myColor=COLORS[num%COLORS.length];
-
-  // Session ID for online tracking
-  const sessionId = "s_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
-  sessionStorage.setItem("ubs_session_id", sessionId);
-
-  // Desktop sidebar
-  const sdAv=document.getElementById("sd-av");
-  if(sdAv){sdAv.style.background=myColor.bg;sdAv.style.color=myColor.c;sdAv.textContent="A"+num.toString().charAt(0)}
-  const sdAl=document.getElementById("sd-alias");
-  if(sdAl)sdAl.textContent=myAlias;
-
-  document.getElementById("overlay").classList.add("hidden");
-  loggedIn=true;
-
-  // Start heartbeat
-  heartbeat();
-  setInterval(heartbeat,15000);
-  setInterval(renderOnline,8000);
-
-  rebuildTabs();
-  rebuildDesktopRooms();
-  switchRoom("general");
-  renderOnline();
-
-  showToast("Вы — "+myAlias);
-  setTimeout(()=>document.getElementById("msg-inp").focus(),300);
-}
-
-// ═══════════════════════════════════════
-//  EVENTS
-// ═══════════════════════════════════════
-document.getElementById("auth-btn").addEventListener("click",tryLogin);
-document.getElementById("email-inp").addEventListener("keydown",e=>{if(e.key==="Enter")tryLogin()});
-document.getElementById("msg-inp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}});
-document.getElementById("send-btn").addEventListener("click",sendMessage);
-document.getElementById("msg-inp").addEventListener("input",e=>{document.getElementById("char-c").textContent=400-e.target.value.length});
-
-document.getElementById("users-btn").addEventListener("click",()=>{renderOnline();document.getElementById("users-panel").classList.add("open")});
-document.getElementById("up-bg").addEventListener("click",()=>{document.getElementById("users-panel").classList.remove("open")});
-
-// iOS keyboard fix
-if(window.visualViewport){
-  window.visualViewport.addEventListener("resize",()=>{
-    document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;
-  });
-}
-
-// Cleanup offline users periodically
-setInterval(()=>{
-  const now=Date.now();
-  onlineDB.map().once(function(data,key){
-    if(data && data.lastSeen && (now-data.lastSeen)>120000){
-      onlineDB.get(key).put(null); // remove stale
+    function saveFB() {
+      const url = (document.getElementById("fb-url").value || "").trim().replace(/\/+$/, "");
+      const err = document.getElementById("setup-err");
+      if (!url.startsWith("https://")) { err.textContent = "Введи корректный URL."; err.style.color = "var(--red)"; return; }
+      localStorage.setItem(FB_KEY, url); FB = url;
+      document.getElementById("setup-overlay").style.display = "none";
+      document.getElementById("auth-overlay").style.display = "flex";
     }
-  });
-},60000);
 
-// Init
-document.getElementById("h-name").textContent=ROOMS[0].name;
-document.getElementById("h-sub").textContent=ROOMS[0].desc;
-</script>
+    // Auth
+    document.getElementById("auth-btn").addEventListener("click", tryLogin);
+    document.getElementById("email-inp").addEventListener("keydown", e => { if (e.key === "Enter") tryLogin(); });
+    function tryLogin() {
+      const val = document.getElementById("email-inp").value.trim().toLowerCase();
+      const err = document.getElementById("auth-err");
+      if (!val) { err.textContent = "Введите email."; return; }
+      if (!val.includes("@")) { err.textContent = "Неверный формат."; return; }
+      if (val.split("@")[1] !== DOMAIN) { err.textContent = "Доступ только с @" + DOMAIN; return; }
+      let saved = sessionStorage.getItem(ALIAS_KEY);
+      if (!saved) { saved = "Аноним #" + randInt(10, 99); sessionStorage.setItem(ALIAS_KEY, saved); }
+      myAlias = saved;
+      const col = colorOf(myAlias);
+      document.getElementById("s-alias").textContent = myAlias;
+      const av = document.getElementById("s-avatar"); av.style.background = col.bg; av.style.color = col.text; av.textContent = initials(myAlias);
+      document.getElementById("auth-overlay").style.display = "none";
+      document.getElementById("msg-inp").disabled = false;
+      document.getElementById("send-btn").disabled = false;
+      buildSidebar(); switchRoom("general"); updateOnline(); setInterval(updateOnline, 30000);
+      toast("Добро пожаловать! Вы — " + myAlias);
+    }
+
+    // Sidebar
+    function buildSidebar() {
+      const list = document.getElementById("room-list"); list.innerHTML = "";
+      ROOMS.forEach(r => {
+        const d = document.createElement("div"); d.className = "room" + (r.id === activeRoom ? " active" : "");
+        d.innerHTML = `<div class="room-icon" style="background:${r.color}22;">${r.icon}</div><span class="room-name">${r.name}</span>`;
+        d.addEventListener("click", () => switchRoom(r.id));
+        list.appendChild(d);
+      });
+    }
+
+    // Switch room
+    function switchRoom(id) {
+      activeRoom = id; knownIds.clear();
+      const r = ROOMS.find(x => x.id === id);
+      document.getElementById("ch-icon").textContent = r.icon;
+      document.getElementById("ch-name").textContent = r.name;
+      document.getElementById("ch-sub").textContent = r.desc;
+      buildSidebar();
+      const c = document.getElementById("messages");
+      c.innerHTML = `<div class="sys-line"><span class="spinner"></span>Загрузка…</div>`;
+
+      fbGet("/rooms/" + id).then(data => {
+        c.innerHTML = ""; appendSys("— начало истории —");
+        if (data) {
+          const entries = Object.entries(data).filter(([, v]) => !v.reported).sort(([, a], [, b]) => a.ts - b.ts);
+          entries.forEach(([key, msg]) => { knownIds.add(key); appendMsgEl(key, msg, false); });
+        }
+        c.scrollTop = c.scrollHeight;
+      }).catch(() => { c.innerHTML = ""; appendSys("Ошибка загрузки. Проверь URL базы данных."); });
+
+      // SSE realtime
+      if (activeES) activeES.close();
+      const es = new EventSource(FB + "/rooms/" + id + ".json");
+      es.addEventListener("patch", e => {
+        try {
+          const patch = JSON.parse(e.data).data;
+          if (!patch) return;
+          Object.entries(patch).forEach(([key, msg]) => {
+            if (!msg || knownIds.has(key) || msg.reported) return;
+            knownIds.add(key); appendMsgEl(key, msg, true);
+          });
+        } catch { }
+      });
+      activeES = es;
+    }
+
+    // Render message
+    function appendMsgEl(key, m, animate) {
+      if (m.reported) return;
+      const c = document.getElementById("messages");
+      const isMe = m.alias === myAlias;
+      const col = colorOf(m.alias);
+      const wrap = document.createElement("div"); wrap.className = "msg-wrap " + (isMe ? "me" : "other");
+      if (!animate) wrap.style.animation = "none";
+      const av = document.createElement("div"); av.className = "msg-av"; av.style.background = col.bg; av.style.color = col.text; av.textContent = initials(m.alias);
+      const body = document.createElement("div"); body.className = "msg-body";
+      if (isMe) body.style.alignItems = "flex-end";
+      const meta = document.createElement("div"); meta.className = "msg-meta"; meta.textContent = (isMe ? "Вы" : m.alias) + " · " + ts2time(m.ts);
+      const bubble = document.createElement("div"); bubble.className = "bubble"; bubble.textContent = m.text;
+      body.appendChild(meta); body.appendChild(bubble);
+      if (!isMe) {
+        const rb = document.createElement("button"); rb.className = "report-btn"; rb.textContent = "⚑ пожаловаться";
+        rb.addEventListener("click", () => { fbPatch("/rooms/" + activeRoom + "/" + key, { reported: true }).catch(() => { }); wrap.remove(); toast("Жалоба принята. Сообщение скрыто."); });
+        body.appendChild(rb);
+      }
+      wrap.appendChild(av); wrap.appendChild(body);
+      c.appendChild(wrap);
+      if (animate) c.scrollTop = c.scrollHeight;
+    }
+    function appendSys(t) { const d = document.createElement("div"); d.className = "sys-line"; d.textContent = t; document.getElementById("messages").appendChild(d); }
+
+    // Send
+    function sendMsg() {
+      const inp = document.getElementById("msg-inp");
+      const text = inp.value.trim();
+      if (!text || !myAlias || !FB) return;
+      inp.value = ""; document.getElementById("char-c").textContent = "400";
+      fbPush("/rooms/" + activeRoom, { alias: myAlias, text, ts: Date.now(), reported: false }).catch(() => toast("Ошибка отправки."));
+    }
+    document.getElementById("send-btn").addEventListener("click", sendMsg);
+    document.getElementById("msg-inp").addEventListener("keydown", e => { if (e.key === "Enter") sendMsg(); });
+    document.getElementById("msg-inp").addEventListener("input", e => { document.getElementById("char-c").textContent = 400 - e.target.value.length; });
+
+    function updateOnline() { document.getElementById("online-pill").textContent = "● " + randInt(18, 65) + " онлайн"; }
+
+    // Init
+    (function () { const saved = localStorage.getItem(FB_KEY); if (saved) { FB = saved; document.getElementById("setup-overlay").style.display = "none"; document.getElementById("auth-overlay").style.display = "flex"; } })();
+  </script>
 </body>
+
 </html>
